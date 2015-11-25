@@ -1,0 +1,3 @@
+{:require  [knotschixx.app]
+ :init-fns [knotschixx.app/init]
+ :compiler-options {:asset-path "js/app.out"}}
