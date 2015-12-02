@@ -1,5 +1,6 @@
 (ns knotschixx.app
-  (:require [reagent.core :as reagent :refer [atom]]))
+  (:require [reagent.core :as reagent :refer [atom]]
+             [clojure.data :as d]))
 
 
 
@@ -14,10 +15,12 @@
 
 (def nums (->> cubesize (* 2) (+ 1) (range 2)))
 
+(def heart "\u2764")
+
 (defn nums->fields
   ([nums] (nums->fields nums false))
   ([nums reverse?]
-    (conj (vec (if reverse? (reverse nums) nums)) "\u2764")))
+    (conj (vec (if reverse? (reverse nums) nums)) heart)))
 
 (def fields
   "[[\"red\" [2 3 4 5 6 7 8 9 10 11 12 \"\u2764\"]]
@@ -56,14 +59,17 @@
 
 (defn checkable? [color number]
   (let [reversed? (-> colors color :reversed)
+        checked-set (->> @app-state :checked color)
         max-checked (or
-                     (->> @app-state
-                          :checked
-                          color
-                          (apply (if reversed? min max)))
-                    (if reversed? 999999 0))
-        comperator-fn (if reversed? < >)]
-    (comperator-fn number max-checked)))
+                     (apply (if reversed? min max) checked-set)
+                     (if reversed? 999999 0))
+        comperator-fn (if reversed? < >)
+        count-checked (count checked-set)
+        is-last? (-> @app-state :fields color reverse rest first (= number))]
+    (and (comperator-fn number max-checked)
+         (not (and is-last? (< count-checked 5)))
+         (not= number heart))))
+
 
 (defn numcell [col n]
   (let [checkable? (checkable? col n)
@@ -71,15 +77,12 @@
         classes {"num " true
                  "crossed " checked?
                  "crossable " checkable?}]
-    (.info js/console (str (name col)))
     [:span {:class (apply str (keys (filter val classes)))
             :key (str "numcell-" col "-" n)
           :on-click #(when checkable? (swap! app-state update-in [:checked col] conj n))}
    n]))
 
 (defn row [color]
-  (.info js/console (str (name (first color))))
-  (.info js/console (str (second color)))
   [(keyword (str "div.row." (name (first color)))) {:key (str "row-" (first color))}
    (doall (map (partial numcell (first color)) (second color)))])
 
@@ -105,6 +108,15 @@
   (add-watch app-state ::undo-watcher
              (fn [_ _ old-state _]
                (swap! undo-list conj old-state)))
+  (add-watch app-state ::diff-watcher
+             (fn [_ _ old-state new-state]
+               (if-let [changed (second (d/diff (:checked old-state) (:checked new-state)))]
+                 (let [color (-> changed keys first)
+                       number (-> changed vals first first)
+                       is-last? (-> @app-state :fields color reverse rest first (= number))]
+                   (.log js/console (str changed))
+                   (when is-last?
+                     (swap! app-state update-in [:checked color] conj heart))))))
   [:div "Parent component"
    (doall (map row (:fields @app-state)))
    [show-score (:checked @app-state)]
