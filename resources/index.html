@@ -5,11 +5,23 @@
     <title>hi, world!</title>
   </head>
   <body>
-    <h1>knotschixx</h1>
     <div id="container"></div>
     <script type="text/javascript" src="js/app.js"></script>
 
       <style>
+          .row.red span {
+              background-color: red;
+          }
+          .row.yellow span {
+              background-color: yellow;
+          }
+          .row.green span {
+              background-color: green;
+          }
+          .row.blue span {
+              background-color: blue;
+          }
+
           .row > span {
               display: inline-block;
               width: 30px;
@@ -17,13 +29,26 @@
               border: 1px solid #000;
               text-align: center;
               background-color: rgba(255,0,0,0.5);
+              opacity: 0.5;
+              background-color: #f00;
+              position: relative;
           }
           .row > span.crossable {
-              background-color: #fff;
               cursor: pointer;
+              opacity: 1;
           }
           .row > span.crossed {
-              background-color: #f00;
+              opacity: 1;
+          }
+          .row > span.crossed:after {
+              content: "\2715";
+              position: absolute;
+              top: 2px;
+              left: -5px;
+              width: 30px;
+              height: 30px;
+              font-size: 50px;
+              line-height: 30px;
           }
       </style>
   </body>
