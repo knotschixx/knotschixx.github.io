@@ -2,15 +2,6 @@
   (:require [reagent.core :as reagent :refer [atom]]
              [clojure.data :as d]))
 
-
-
-
-#_(def pnums (vec (range 2 13)))
-
-#_(def qnums (range 1 7))
-
-#_(def colors ["red" "yellow" "green" "blue"])
-
 (def cubesize 6)
 
 (def nums (->> cubesize (* 2) (+ 1) (range 2)))
@@ -23,10 +14,6 @@
     (conj (vec (if reverse? (reverse nums) nums)) heart)))
 
 (def fields
-  "[[\"red\" [2 3 4 5 6 7 8 9 10 11 12 \"\u2764\"]]
-    [\"yellow\" [2 3 4 5 6 7 8 9 10 11 12 \"\u2764\"]]
-    [\"green\" [12 11 10 9 8 7 6 5 4 3 2 \"\u2764\"]
-    [\"blue\" [12 11 10 9 8 7 6 5 4 3 2 \"\u2764\"]]"
   {:red (nums->fields nums)
    :yellow (nums->fields nums)
    :green (nums->fields nums true)
@@ -38,11 +25,11 @@
    :green {:reversed true}
    :blue {:reversed true}})
 
+(def init-checked
+  {:red #{} :yellow #{} :green #{} :blue #{}})
+
 (defonce app-state (atom {:fields fields
-                          :checked {:red #{}
-                                    :yellow #{}
-                                    :green #{}
-                                    :blue #{}}}))
+                          :checked init-checked}))
 
 (def undo-list (atom nil))
 
@@ -92,6 +79,9 @@
       (reset! app-state old)
       (reset! undo-list (rest undos)))))
 
+(defn new-game []
+  (swap! app-state assoc :checked init-checked))
+
 (defn sum [c]
   (reduce + c))
 
@@ -114,13 +104,14 @@
                  (let [color (-> changed keys first)
                        number (-> changed vals first first)
                        is-last? (-> @app-state :fields color reverse rest first (= number))]
-                   (.log js/console (str changed))
                    (when is-last?
                      (swap! app-state update-in [:checked color] conj heart))))))
-  [:div "Parent component"
+  [:div12
    (doall (map row (:fields @app-state)))
    [show-score (:checked @app-state)]
-   [:button {:on-click undo :disabled (not (count @undo-list))} "undo"]])
+   [:button {:on-click undo :disabled (not (count @undo-list))} "rückgängig"]
+   [:button {:on-click new-game} "neues spiel"]
+   ])
 
 (defn init []
   (.log js/console (str (:fields @app-state)))
