@@ -1,0 +1,1 @@
+{:require [knotschixx.app adzerk.boot-cljs-repl adzerk.boot-reload], :init-fns [knotschixx.app/init], :compiler-options {:asset-path "js/app.out"}}
